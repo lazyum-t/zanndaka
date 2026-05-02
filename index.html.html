@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>残高計算機</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg:#f2f2f7; --surface:#fff; --accent:#007aff; --accent2:#34c759;
+      --danger:#ff3b30; --text:#1c1c1e; --text2:#6c6c70; --text3:#8e8e93;
+      --sep:rgba(60,60,67,0.18); --nav-bg:rgba(255,255,255,0.92); --radius:12px;
+    }
+    body { font-family:-apple-system,'Hiragino Sans','Hiragino Kaku Gothic ProN',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; -webkit-text-size-adjust:100%; }
+    .page { display:none; min-height:100vh; flex-direction:column; }
+    .page.active { display:flex; }
+    .navbar { position:sticky; top:0; z-index:200; background:var(--nav-bg); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); border-bottom:0.5px solid var(--sep); padding:10px 8px; display:flex; align-items:center; justify-content:space-between; min-height:54px; }
+    .navbar-title { font-size:17px; font-weight:600; text-align:center; flex:1; }
+    .nav-btn { background:none; border:none; color:var(--accent); font-size:16px; padding:8px 12px; cursor:pointer; min-width:72px; font-family:inherit; -webkit-tap-highlight-color:transparent; border-radius:8px; }
+    .nav-btn.right { text-align:right; } .nav-btn.left { text-align:left; }
+    .nav-btn:active { background:rgba(0,122,255,0.12); }
+    .scroll-content { flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; padding:18px 16px 80px; }
+    .group { background:var(--surface); border-radius:var(--radius); margin-bottom:18px; overflow:hidden; }
+    .group-label { font-size:12px; font-weight:600; letter-spacing:0.6px; text-transform:uppercase; color:var(--text2); padding:0 4px 6px; }
+    .input-row { display:flex; align-items:center; padding:0 16px; background:var(--surface); border-top:0.5px solid var(--sep); min-height:50px; }
+    .input-row:first-child { border-top:none; }
+    .input-row > label { font-size:16px; min-width:110px; flex-shrink:0; }
+    .input-row > input, .input-row > select { flex:1; border:none; outline:none; font-size:16px; padding:13px 0; text-align:right; background:transparent; font-family:inherit; color:var(--text); -webkit-appearance:none; }
+    .input-row > input::placeholder { color:var(--text3); }
+    .balance-block { background:var(--surface); border-radius:var(--radius); padding:16px 18px; margin-bottom:18px; }
+    .balance-label { font-size:12px; font-weight:600; letter-spacing:0.6px; text-transform:uppercase; color:var(--text2); margin-bottom:10px; }
+    .balance-row { display:flex; align-items:baseline; gap:6px; }
+    .balance-yen { font-size:24px; color:var(--text2); }
+    .balance-input { flex:1; border:none; outline:none; font-size:34px; font-weight:700; padding:0; background:transparent; font-family:inherit; color:var(--text); min-width:0; }
+    .balance-input::placeholder { color:#d1d1d6; }
+    .balance-unit { font-size:18px; color:var(--text2); font-weight:500; }
+    .save-indicator { font-size:11px; color:var(--accent2); text-align:right; margin-top:6px; min-height:16px; transition:opacity 0.4s; }
+    .tx-item { padding:12px 16px; border-top:0.5px solid var(--sep); background:var(--surface); }
+    .tx-item:first-child { border-top:none; }
+    .tx-top { display:flex; align-items:center; gap:6px; margin-bottom:8px; flex-wrap:wrap; }
+    .tx-date { font-size:13px; color:var(--text2); }
+    .tx-name { font-size:16px; font-weight:500; flex:1; }
+    .badge { font-size:11px; font-weight:600; padding:2px 8px; border-radius:20px; }
+    .badge-out { background:#ffe0de; color:var(--danger); }
+    .badge-in  { background:#daf5e2; color:var(--accent2); }
+    .tx-amount-row { display:flex; align-items:center; gap:6px; }
+    .tx-sign { font-size:16px; color:var(--text2); }
+    .tx-amount-input { flex:1; border:none; border-bottom:1.5px solid #d1d1d6; outline:none; font-size:20px; font-weight:600; padding:2px 0; text-align:right; background:transparent; font-family:inherit; color:var(--text); min-width:0; }
+    .tx-amount-input:focus { border-bottom-color:var(--accent); }
+    .tx-amount-input::placeholder { color:#c7c7cc; font-weight:400; }
+    .tx-unit { font-size:15px; color:var(--text2); }
+    .add-row { display:flex; align-items:center; gap:8px; padding:14px 16px; border-top:0.5px solid var(--sep); color:var(--accent); font-size:16px; cursor:pointer; -webkit-tap-highlight-color:transparent; user-select:none; }
+    .add-row:active { background:var(--bg); }
+    .settings-item { display:flex; align-items:center; padding:12px 16px; border-top:0.5px solid var(--sep); background:var(--surface); gap:8px; }
+    .settings-item:first-child { border-top:none; }
+    .settings-item-info { flex:1; min-width:0; }
+    .settings-item-name { font-size:16px; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .settings-item-sub { font-size:12px; color:var(--text3); margin-top:2px; }
+    .action-btn { border:none; font-size:13px; padding:7px 12px; cursor:pointer; border-radius:8px; font-family:inherit; font-weight:600; -webkit-tap-highlight-color:transparent; flex-shrink:0; pointer-events:auto; }
+    .action-btn:active { opacity:0.55; }
+    .edit-btn { background:#e5f0ff; color:var(--accent); }
+    .del-btn  { background:#ffe5e3; color:var(--danger); }
+    .btn-primary { width:100%; padding:16px; background:var(--accent); color:#fff; border:none; border-radius:var(--radius); font-size:17px; font-weight:600; cursor:pointer; font-family:inherit; margin-bottom:12px; -webkit-tap-highlight-color:transparent; }
+    .btn-primary:active { opacity:0.8; }
+    .result-section { display:none; margin-top:4px; }
+    .result-initial { display:flex; justify-content:space-between; align-items:center; padding:13px 16px; font-size:15px; font-weight:500; }
+    .result-entry { border-top:0.5px solid var(--sep); }
+    .result-line { display:flex; justify-content:space-between; align-items:center; padding:8px 16px 4px; font-size:14px; }
+    .result-line-date { color:var(--text2); flex-shrink:0; margin-right:8px; }
+    .result-line-name { font-size:15px; color:var(--text); flex:1; }
+    .result-line-amount { font-weight:600; flex-shrink:0; margin-left:8px; }
+    .result-line-amount.neg { color:var(--danger); }
+    .result-line-amount.pos { color:var(--accent2); }
+    .result-balance { display:flex; justify-content:space-between; align-items:center; padding:6px 16px 10px; font-size:15px; font-weight:700; }
+    .result-balance .label { color:var(--text2); font-weight:500; }
+    .result-balance.warn { background:#fff5f4; }
+    .result-balance.warn .amount { color:var(--danger); }
+    .empty-state { padding:40px 20px; text-align:center; color:var(--text3); }
+    .empty-icon { font-size:44px; margin-bottom:10px; }
+    .empty-text { font-size:15px; line-height:1.6; }
+    input[type=number]{-moz-appearance:textfield;}
+    input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
+  </style>
+</head>
+<body>
+
+<!-- PAGE: MAIN -->
+<div id="page-main" class="page active">
+  <div class="navbar">
+    <span style="min-width:72px"></span>
+    <span class="navbar-title">💰 残高計算機</span>
+    <button class="nav-btn right" id="btn-go-settings">計算方法 ›</button>
+  </div>
+  <div class="scroll-content">
+    <div class="balance-block">
+      <div class="balance-label">現在の口座残高</div>
+      <div class="balance-row">
+        <span class="balance-yen">¥</span>
+        <input type="number" class="balance-input" id="current-balance" placeholder="0" inputmode="numeric">
+        <span class="balance-unit">円</span>
+      </div>
+      <div class="save-indicator" id="save-indicator"></div>
+    </div>
+    <div class="group-label">支払予定 / 収入予定</div>
+    <div class="group"><div id="tx-list"></div></div>
+    <button class="btn-primary" id="btn-calculate">🧮 計算開始</button>
+    <div class="result-section" id="result-section">
+      <div class="group-label">残高シミュレーション</div>
+      <div class="group" id="result-content"></div>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE: SETTINGS -->
+<div id="page-settings" class="page">
+  <div class="navbar">
+    <button class="nav-btn left" id="btn-settings-done">‹ 完了</button>
+    <span class="navbar-title">計算方法の設定</span>
+    <span style="min-width:72px"></span>
+  </div>
+  <div class="scroll-content">
+    <div class="group-label">クレジットカード（支出）</div>
+    <div class="group">
+      <div id="card-list-el"></div>
+      <div class="add-row" id="btn-add-card">＋　クレジットカードを追加</div>
+    </div>
+    <div class="group-label">収入</div>
+    <div class="group">
+      <div id="income-list-el"></div>
+      <div class="add-row" id="btn-add-income">＋　収入を追加</div>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE: ADD/EDIT CARD -->
+<div id="page-add-card" class="page">
+  <div class="navbar">
+    <button class="nav-btn left" id="btn-card-cancel">キャンセル</button>
+    <span class="navbar-title" id="card-page-title">カードを追加</span>
+    <button class="nav-btn right" id="btn-card-save" style="font-weight:600">保存</button>
+  </div>
+  <div class="scroll-content">
+    <div class="group">
+      <div class="input-row"><label for="c-name">カード名</label><input type="text" id="c-name" placeholder="例：イオンカード"></div>
+      <div class="input-row"><label for="c-day">引き落とし日</label><input type="number" id="c-day" placeholder="例：10" min="1" max="31" inputmode="numeric"></div>
+      <div class="input-row"><label for="c-weekend">土日の場合</label>
+        <select id="c-weekend">
+          <option value="before">前の金曜日に前倒し</option>
+          <option value="after">翌月曜日に繰り越し</option>
+          <option value="none">そのまま</option>
+        </select>
+      </div>
+    </div>
+    <p style="font-size:13px;color:var(--text3);padding:4px;line-height:1.6;margin-top:8px">※ 祝日は考慮されません。実際の引き落とし日はカード会社にご確認ください。</p>
+  </div>
+</div>
+
+<!-- PAGE: ADD/EDIT INCOME -->
+<div id="page-add-income" class="page">
+  <div class="navbar">
+    <button class="nav-btn left" id="btn-income-cancel">キャンセル</button>
+    <span class="navbar-title" id="income-page-title">収入を追加</span>
+    <button class="nav-btn right" id="btn-income-save" style="font-weight:600">保存</button>
+  </div>
+  <div class="scroll-content">
+    <div class="group">
+      <div class="input-row"><label for="i-name">収入源名</label><input type="text" id="i-name" placeholder="例：給与"></div>
+      <div class="input-row"><label for="i-day">振込日</label><input type="number" id="i-day" placeholder="例：25" min="1" max="31" inputmode="numeric"></div>
+      <div class="input-row"><label for="i-weekend">土日の場合</label>
+        <select id="i-weekend">
+          <option value="before">前の金曜日に前倒し</option>
+          <option value="after">翌月曜日に繰り越し</option>
+          <option value="none">そのまま</option>
+        </select>
+      </div>
+    </div>
+    <p style="font-size:13px;color:var(--text3);padding:4px;line-height:1.6;margin-top:8px">※ 祝日は考慮されません。実際の振込日はご確認ください。</p>
+  </div>
+</div>
+
+<script>
+(function () {
+
+  /* ========== STORAGE ========== */
+  function lsGet(k, def) {
+    try { var v = localStorage.getItem(k); return v === null ? def : JSON.parse(v); }
+    catch(e) { return def; }
+  }
+  function lsSet(k, v) {
+    try { localStorage.setItem(k, JSON.stringify(v)); return true; }
+    catch(e) { return false; }
+  }
+
+  var DB = {
+    cards:       function() { return lsGet('rc_cards',   []); },
+    incomes:     function() { return lsGet('rc_incomes', []); },
+    saveCards:   function(v) { lsSet('rc_cards',   v); },
+    saveIncomes: function(v) { lsSet('rc_incomes', v); },
+    getBalance:  function()  { return lsGet('rc_balance', ''); },
+    saveBalance: function(v) { lsSet('rc_balance', v); },
+    getAmounts:  function()  { return lsGet('rc_amounts', {}); },
+    saveAmounts: function(v) { lsSet('rc_amounts', v); }
+  };
+
+  /* ========== EDIT STATE ========== */
+  var editingCardId   = null;
+  var editingIncomeId = null;
+
+  /* ========== NAVIGATION ========== */
+  function goPage(id) {
+    document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
+    document.getElementById(id).classList.add('active');
+    window.scrollTo(0, 0);
+  }
+
+  /* ========== SAVE INDICATOR ========== */
+  var _saveTimer = null;
+  function showSaved() {
+    var el = document.getElementById('save-indicator');
+    if (!el) return;
+    el.textContent = '✓ 自動保存しました';
+    el.style.opacity = '1';
+    clearTimeout(_saveTimer);
+    _saveTimer = setTimeout(function(){ el.style.opacity = '0'; }, 2000);
+  }
+
+  /* ========== DATE UTILS ========== */
+  var DOW = ['日','月','火','水','木','金','土'];
+  function fmtDate(d) { return (d.getMonth()+1)+'/'+d.getDate()+'（'+DOW[d.getDay()]+'）'; }
+  function adjustWeekend(d, rule) {
+    var r = new Date(d), w = r.getDay();
+    if (w===6||w===0) {
+      if (rule==='before') r.setDate(r.getDate()-(w===6?1:2));
+      else if (rule==='after') r.setDate(r.getDate()+(w===6?2:1));
+    }
+    return r;
+  }
+  function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  /* ========== GENERATE TRANSACTIONS ========== */
+  var _txData = [];
+  function genTransactions() {
+    var today=new Date(); today.setHours(0,0,0,0);
+    var end=new Date(today); end.setDate(end.getDate()+92);
+    var cards=DB.cards(), incomes=DB.incomes(), list=[];
+    for (var mi=0;mi<=3;mi++) {
+      var yr=today.getFullYear(), mo=today.getMonth()+mi;
+      var last=new Date(yr,mo+1,0).getDate();
+      cards.forEach(function(c){
+        var d=adjustWeekend(new Date(yr,mo,Math.min(c.day,last)),c.weekendRule);
+        if(d>=today&&d<=end) list.push({date:d,name:c.name,type:'card',key:c.id+'_'+mi});
+      });
+      incomes.forEach(function(inc){
+        var d=adjustWeekend(new Date(yr,mo,Math.min(inc.day,last)),inc.weekendRule);
+        if(d>=today&&d<=end) list.push({date:d,name:inc.name,type:'income',key:inc.id+'_'+mi});
+      });
+    }
+    list.sort(function(a,b){return a.date-b.date;});
+    return list;
+  }
+
+  /* ========== RENDER TX LIST ========== */
+  function renderTxList() {
+    _txData = genTransactions();
+    var el = document.getElementById('tx-list');
+    if (_txData.length===0) {
+      el.innerHTML='<div class="empty-state"><div class="empty-icon">📋</div><div class="empty-text">「計算方法」ボタンから<br>カードや収入を追加してください</div></div>';
+      return;
+    }
+    var savedAmts = DB.getAmounts();
+    el.innerHTML = _txData.map(function(tx,i){
+      var isIncome=tx.type==='income';
+      var sign=isIncome?'+ ¥':'− ¥';
+      var badge=isIncome?'<span class="badge badge-in">収入</span>':'<span class="badge badge-out">支出</span>';
+      var savedVal = savedAmts[tx.key] || '';
+      return '<div class="tx-item">'
+        +'<div class="tx-top"><span class="tx-date">'+fmtDate(tx.date)+'</span><span class="tx-name">'+esc(tx.name)+'</span>'+badge+'</div>'
+        +'<div class="tx-amount-row"><span class="tx-sign">'+sign+'</span>'
+        +'<input type="number" class="tx-amount-input" id="tx-'+i+'" data-key="'+tx.key+'" placeholder="0" inputmode="numeric" min="0" value="'+esc(String(savedVal))+'">'
+        +'<span class="tx-unit">円</span></div>'
+        +'</div>';
+    }).join('');
+
+    /* auto-save amounts on input */
+    _txData.forEach(function(tx,i){
+      var inp = document.getElementById('tx-'+i);
+      if (!inp) return;
+      inp.addEventListener('input', function(){
+        var amts = DB.getAmounts();
+        amts[tx.key] = this.value;
+        DB.saveAmounts(amts);
+        showSaved();
+      });
+    });
+  }
+
+  /* ========== AUTO-SAVE BALANCE ========== */
+  document.getElementById('current-balance').addEventListener('input', function(){
+    DB.saveBalance(this.value);
+    showSaved();
+  });
+
+  /* ========== CALCULATE ========== */
+  function calculate() {
+    var balStr = document.getElementById('current-balance').value;
+    if (!balStr) { alert('現在の口座残高を入力してください'); return; }
+    if (_txData.length===0) { alert('計算方法ページでカードや収入を追加してください'); return; }
+    var balance = parseInt(balStr)||0;
+    var today=new Date(); today.setHours(0,0,0,0);
+    var html='<div class="result-initial"><span style="color:var(--text2)">'+fmtDate(today)+'　現在</span><span style="font-size:17px;font-weight:700">¥'+balance.toLocaleString()+'</span></div>';
+    _txData.forEach(function(tx,i){
+      var inp=document.getElementById('tx-'+i);
+      var amt=parseInt(inp?inp.value:'0')||0;
+      var isIncome=tx.type==='income';
+      balance+=isIncome?amt:-amt;
+      var isNeg=balance<0;
+      html+='<div class="result-entry">'
+        +'<div class="result-line"><span class="result-line-date">'+fmtDate(tx.date)+'</span><span class="result-line-name">'+esc(tx.name)+'</span><span class="result-line-amount '+(isIncome?'pos':'neg')+'">'+(isIncome?'+¥':'−¥')+amt.toLocaleString()+'</span></div>'
+        +'<div class="result-balance'+(isNeg?' warn':'')+'"><span class="label">残高'+(isNeg?'　⚠️':'')+'</span><span class="amount">¥'+balance.toLocaleString()+'</span></div>'
+        +'</div>';
+    });
+    document.getElementById('result-content').innerHTML=html;
+    var sec=document.getElementById('result-section');
+    sec.style.display='block';
+    setTimeout(function(){sec.scrollIntoView({behavior:'smooth',block:'start'});},80);
+  }
+
+  /* ========== RENDER SETTINGS ========== */
+  var wkLabel={before:'前の金曜日',after:'翌月曜日',none:'そのまま'};
+
+  function renderSettingsLists() {
+    var cards=DB.cards(), incomes=DB.incomes();
+
+    document.getElementById('card-list-el').innerHTML = cards.length===0
+      ? '<div style="padding:14px 16px;color:var(--text3);font-size:15px">まだ登録がありません</div>'
+      : cards.map(function(c){
+          return '<div class="settings-item" data-id="'+c.id+'" data-type="card">'
+            +'<div class="settings-item-info">'
+            +'<div class="settings-item-name">'+esc(c.name)+'</div>'
+            +'<div class="settings-item-sub">毎月'+c.day+'日 ／ 土日は'+wkLabel[c.weekendRule]+'</div>'
+            +'</div>'
+            +'<button class="action-btn edit-btn" data-id="'+c.id+'" data-type="card">編集</button>'
+            +'<button class="action-btn del-btn"  data-id="'+c.id+'" data-type="card">削除</button>'
+            +'</div>';
+        }).join('');
+
+    document.getElementById('income-list-el').innerHTML = incomes.length===0
+      ? '<div style="padding:14px 16px;color:var(--text3);font-size:15px">まだ登録がありません</div>'
+      : incomes.map(function(inc){
+          return '<div class="settings-item" data-id="'+inc.id+'" data-type="income">'
+            +'<div class="settings-item-info">'
+            +'<div class="settings-item-name">'+esc(inc.name)+'</div>'
+            +'<div class="settings-item-sub">毎月'+inc.day+'日 ／ 土日は'+wkLabel[inc.weekendRule]+'</div>'
+            +'</div>'
+            +'<button class="action-btn edit-btn" data-id="'+inc.id+'" data-type="income">編集</button>'
+            +'<button class="action-btn del-btn"  data-id="'+inc.id+'" data-type="income">削除</button>'
+            +'</div>';
+        }).join('');
+
+    /* ---- attach button listeners individually after render ---- */
+    document.querySelectorAll('#card-list-el .del-btn').forEach(function(btn){
+      btn.addEventListener('click', function(e){
+        e.stopPropagation();
+        var id = btn.getAttribute('data-id');
+        if (!confirm('このカードを削除しますか？')) return;
+        DB.saveCards(DB.cards().filter(function(c){return c.id!==id;}));
+        renderSettingsLists();
+      });
+    });
+    document.querySelectorAll('#card-list-el .edit-btn').forEach(function(btn){
+      btn.addEventListener('click', function(e){
+        e.stopPropagation();
+        var id = btn.getAttribute('data-id');
+        var card = DB.cards().filter(function(c){return c.id===id;})[0];
+        if (!card) return;
+        editingCardId = id;
+        document.getElementById('card-page-title').textContent='カードを編集';
+        document.getElementById('c-name').value=card.name;
+        document.getElementById('c-day').value=card.day;
+        document.getElementById('c-weekend').value=card.weekendRule;
+        goPage('page-add-card');
+      });
+    });
+    document.querySelectorAll('#income-list-el .del-btn').forEach(function(btn){
+      btn.addEventListener('click', function(e){
+        e.stopPropagation();
+        var id = btn.getAttribute('data-id');
+        if (!confirm('この収入を削除しますか？')) return;
+        DB.saveIncomes(DB.incomes().filter(function(i){return i.id!==id;}));
+        renderSettingsLists();
+      });
+    });
+    document.querySelectorAll('#income-list-el .edit-btn').forEach(function(btn){
+      btn.addEventListener('click', function(e){
+        e.stopPropagation();
+        var id = btn.getAttribute('data-id');
+        var inc = DB.incomes().filter(function(i){return i.id===id;})[0];
+        if (!inc) return;
+        editingIncomeId = id;
+        document.getElementById('income-page-title').textContent='収入を編集';
+        document.getElementById('i-name').value=inc.name;
+        document.getElementById('i-day').value=inc.day;
+        document.getElementById('i-weekend').value=inc.weekendRule;
+        goPage('page-add-income');
+      });
+    });
+  }
+
+  /* ========== SAVE CARD ========== */
+  function saveCard() {
+    var name=document.getElementById('c-name').value.trim();
+    var day=parseInt(document.getElementById('c-day').value);
+    var wr=document.getElementById('c-weekend').value;
+    if (!name){alert('カード名を入力してください');return;}
+    if (!day||day<1||day>31){alert('引き落とし日を 1〜31 で入力してください');return;}
+    var cards=DB.cards();
+    if (editingCardId) {
+      cards=cards.map(function(c){return c.id===editingCardId?{id:c.id,name:name,day:day,weekendRule:wr}:c;});
+    } else {
+      cards.push({id:Date.now().toString(),name:name,day:day,weekendRule:wr});
+    }
+    DB.saveCards(cards);
+    editingCardId=null;
+    renderSettingsLists();
+    goPage('page-settings');
+  }
+
+  /* ========== SAVE INCOME ========== */
+  function saveIncome() {
+    var name=document.getElementById('i-name').value.trim();
+    var day=parseInt(document.getElementById('i-day').value);
+    var wr=document.getElementById('i-weekend').value;
+    if (!name){alert('収入源の名称を入力してください');return;}
+    if (!day||day<1||day>31){alert('振込日を 1〜31 で入力してください');return;}
+    var incomes=DB.incomes();
+    if (editingIncomeId) {
+      incomes=incomes.map(function(i){return i.id===editingIncomeId?{id:i.id,name:name,day:day,weekendRule:wr}:i;});
+    } else {
+      incomes.push({id:Date.now().toString(),name:name,day:day,weekendRule:wr});
+    }
+    DB.saveIncomes(incomes);
+    editingIncomeId=null;
+    renderSettingsLists();
+    goPage('page-settings');
+  }
+
+  /* ========== STATIC LISTENERS ========== */
+  document.getElementById('btn-go-settings').addEventListener('click',function(){renderSettingsLists();goPage('page-settings');});
+  document.getElementById('btn-settings-done').addEventListener('click',function(){renderTxList();document.getElementById('result-section').style.display='none';goPage('page-main');});
+  document.getElementById('btn-add-card').addEventListener('click',function(){
+    editingCardId=null;
+    document.getElementById('card-page-title').textContent='カードを追加';
+    document.getElementById('c-name').value='';document.getElementById('c-day').value='';document.getElementById('c-weekend').value='before';
+    goPage('page-add-card');
+  });
+  document.getElementById('btn-add-income').addEventListener('click',function(){
+    editingIncomeId=null;
+    document.getElementById('income-page-title').textContent='収入を追加';
+    document.getElementById('i-name').value='';document.getElementById('i-day').value='';document.getElementById('i-weekend').value='before';
+    goPage('page-add-income');
+  });
+  document.getElementById('btn-card-cancel').addEventListener('click',function(){editingCardId=null;goPage('page-settings');});
+  document.getElementById('btn-income-cancel').addEventListener('click',function(){editingIncomeId=null;goPage('page-settings');});
+  document.getElementById('btn-card-save').addEventListener('click',saveCard);
+  document.getElementById('btn-income-save').addEventListener('click',saveIncome);
+  document.getElementById('btn-calculate').addEventListener('click',calculate);
+
+  /* ========== INIT: LOAD SAVED DATA ========== */
+  var savedBal = DB.getBalance();
+  if (savedBal) document.getElementById('current-balance').value = savedBal;
+  renderTxList();
+
+})();
+</script>
+</body>
+</html>
