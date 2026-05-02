@@ -153,15 +153,15 @@
     <div class="group">
       <div class="input-row"><label for="c-name">カード名</label><input type="text" id="c-name" placeholder="例：イオンカード"></div>
       <div class="input-row"><label for="c-day">引き落とし日</label><input type="number" id="c-day" placeholder="例：10" min="1" max="31" inputmode="numeric"></div>
-      <div class="input-row"><label for="c-weekend">土日の場合</label>
+      <div class="input-row"><label for="c-weekend">土日祝の場合</label>
         <select id="c-weekend">
-          <option value="before">前の金曜日に前倒し</option>
-          <option value="after">翌月曜日に繰り越し</option>
+          <option value="before">前の平日に前倒し</option>
+          <option value="after">翌平日に繰り越し</option>
           <option value="none">そのまま</option>
         </select>
       </div>
     </div>
-    <p style="font-size:13px;color:var(--text3);padding:4px;line-height:1.6;margin-top:8px">※ 祝日は考慮されません。実際の引き落とし日はカード会社にご確認ください。</p>
+    <p style="font-size:13px;color:var(--text3);padding:4px;line-height:1.6;margin-top:8px">※ 実際の引き落とし日はカード会社にご確認ください。</p>
   </div>
 </div>
 
@@ -176,15 +176,15 @@
     <div class="group">
       <div class="input-row"><label for="i-name">収入源名</label><input type="text" id="i-name" placeholder="例：給与"></div>
       <div class="input-row"><label for="i-day">振込日</label><input type="number" id="i-day" placeholder="例：25" min="1" max="31" inputmode="numeric"></div>
-      <div class="input-row"><label for="i-weekend">土日の場合</label>
+      <div class="input-row"><label for="i-weekend">土日祝の場合</label>
         <select id="i-weekend">
-          <option value="before">前の金曜日に前倒し</option>
-          <option value="after">翌月曜日に繰り越し</option>
+          <option value="before">前の平日に前倒し</option>
+          <option value="after">翌平日に繰り越し</option>
           <option value="none">そのまま</option>
         </select>
       </div>
     </div>
-    <p style="font-size:13px;color:var(--text3);padding:4px;line-height:1.6;margin-top:8px">※ 祝日は考慮されません。実際の振込日はご確認ください。</p>
+    <p style="font-size:13px;color:var(--text3);padding:4px;line-height:1.6;margin-top:8px">※ 実際の振込日はご確認ください。</p>
   </div>
 </div>
 
@@ -237,15 +237,80 @@
   /* ========== DATE UTILS ========== */
   var DOW = ['日','月','火','水','木','金','土'];
   function fmtDate(d) { return (d.getMonth()+1)+'/'+d.getDate()+'（'+DOW[d.getDay()]+'）'; }
+  function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  /* ---- 日本の祝日計算 ---- */
+  function nthWeekday(yr, mo, nth, dow) {
+    // mo: 0-based, dow: 0=日
+    var d = new Date(yr, mo, 1), count = 0;
+    while (d.getDay() !== dow) d.setDate(d.getDate()+1);
+    d.setDate(d.getDate() + (nth-1)*7);
+    return d.getDate();
+  }
+  function getJPHolidays(yr) {
+    var h = {};
+    function add(mo, day) { h[yr+'-'+(mo+1)+'-'+day] = true; }
+    // 固定祝日
+    add(0,1);   // 元日
+    add(1,11);  // 建国記念の日
+    add(2,20);  // 春分の日 (近似)
+    add(3,29);  // 昭和の日
+    add(4,3); add(4,4); add(4,5); // 憲法記念日・みどりの日・こどもの日
+    add(6,15);  // 海の日 (第3月曜)
+    add(7,11);  // 山の日
+    add(8,15);  // 敬老の日 (第3月曜 近似)
+    add(8,22);  // 秋分の日 (近似)
+    add(9,13);  // スポーツの日 (第2月曜)
+    add(10,3);  // 文化の日
+    add(10,23); // 勤労感謝の日
+    // 移動祝日（正確計算）
+    // 成人の日: 1月第2月曜
+    add(0, nthWeekday(yr,0,2,1));
+    // 海の日: 7月第3月曜
+    add(6, nthWeekday(yr,6,3,1));
+    // 山の日: 8/11 (固定、上で登録済)
+    // 敬老の日: 9月第3月曜
+    add(8, nthWeekday(yr,8,3,1));
+    // スポーツの日: 10月第2月曜
+    add(9, nthWeekday(yr,9,2,1));
+    // 春分・秋分は近似のまま
+    // 振替休日: 日曜祝日→翌月曜
+    var keys = Object.keys(h);
+    keys.forEach(function(k) {
+      var parts = k.split('-');
+      var d = new Date(parseInt(parts[0]), parseInt(parts[1])-1, parseInt(parts[2]));
+      if (d.getDay()===0) {
+        var next = new Date(d); next.setDate(next.getDate()+1);
+        // 翌日も祝日なら翌々日
+        while (h[next.getFullYear()+'-'+(next.getMonth()+1)+'-'+next.getDate()]) next.setDate(next.getDate()+1);
+        h[next.getFullYear()+'-'+(next.getMonth()+1)+'-'+next.getDate()] = true;
+      }
+    });
+    return h;
+  }
+  var _holidayCache = {};
+  function isHoliday(d) {
+    var yr = d.getFullYear();
+    if (!_holidayCache[yr]) _holidayCache[yr] = getJPHolidays(yr);
+    var key = yr+'-'+(d.getMonth()+1)+'-'+d.getDate();
+    return !!_holidayCache[yr][key];
+  }
+  function isNonBusinessDay(d) {
+    var w = d.getDay();
+    return w===0 || w===6 || isHoliday(d);
+  }
+
+  /* 土日祝を考慮して日付を調整 */
   function adjustWeekend(d, rule) {
-    var r = new Date(d), w = r.getDay();
-    if (w===6||w===0) {
-      if (rule==='before') r.setDate(r.getDate()-(w===6?1:2));
-      else if (rule==='after') r.setDate(r.getDate()+(w===6?2:1));
+    var r = new Date(d);
+    if (!isNonBusinessDay(r)) return r;
+    if (rule === 'before') {
+      while (isNonBusinessDay(r)) r.setDate(r.getDate()-1);
+    } else if (rule === 'after') {
+      while (isNonBusinessDay(r)) r.setDate(r.getDate()+1);
     }
     return r;
   }
-  function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
   /* ========== GENERATE TRANSACTIONS PER ENTITY ========== */
   // Returns { cards: [{card, occurrences:[{date,key}]}], incomes: [...] }
@@ -423,7 +488,7 @@
   }
 
   /* ========== RENDER SETTINGS ========== */
-  var wkLabel={before:'前の金曜日',after:'翌月曜日',none:'そのまま'};
+  var wkLabel={before:'前の平日',after:'翌平日',none:'そのまま'};
 
   function renderSettingsLists() {
     var cards=DB.cards(), incomes=DB.incomes();
