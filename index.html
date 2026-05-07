@@ -10,7 +10,7 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
       --bg:#f2f2f7; --surface:#fff; --accent:#007aff; --accent2:#34c759;
-      --danger:#ff3b30; --text:#1c1c1e; --text2:#6c6c70; --text3:#8e8e93;
+      --danger:#ff3b30; --warn:#ff9500; --text:#1c1c1e; --text2:#6c6c70; --text3:#8e8e93;
       --sep:rgba(60,60,67,0.18); --nav-bg:rgba(255,255,255,0.92); --radius:12px;
     }
     body { font-family:-apple-system,'Hiragino Sans','Hiragino Kaku Gothic ProN',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; -webkit-text-size-adjust:100%; }
@@ -29,6 +29,9 @@
     .input-row > label { font-size:16px; min-width:110px; flex-shrink:0; }
     .input-row > input, .input-row > select { flex:1; border:none; outline:none; font-size:16px; padding:13px 0; text-align:right; background:transparent; font-family:inherit; color:var(--text); -webkit-appearance:none; }
     .input-row > input::placeholder { color:var(--text3); }
+    .input-row .unit-label { font-size:15px; color:var(--text2); padding-left:4px; flex-shrink:0; }
+ 
+    /* 残高ブロック */
     .balance-block { background:var(--surface); border-radius:var(--radius); padding:16px 18px; margin-bottom:18px; }
     .balance-label { font-size:12px; font-weight:600; letter-spacing:0.6px; text-transform:uppercase; color:var(--text2); margin-bottom:10px; }
     .balance-row { display:flex; align-items:baseline; gap:6px; }
@@ -37,26 +40,33 @@
     .balance-input::placeholder { color:#d1d1d6; }
     .balance-unit { font-size:18px; color:var(--text2); font-weight:500; }
     .save-indicator { font-size:11px; color:var(--accent2); text-align:right; margin-top:6px; min-height:16px; transition:opacity 0.4s; }
-
-    /* ---- カード／収入ごとのセクション ---- */
+ 
+    /* 更新ボタン */
+    .btn-update { width:100%; padding:15px; background:var(--surface); color:var(--warn); border:1.5px solid var(--warn); border-radius:var(--radius); font-size:16px; font-weight:600; cursor:pointer; font-family:inherit; margin-bottom:12px; -webkit-tap-highlight-color:transparent; }
+    .btn-update:active { opacity:0.7; }
+ 
+    /* エンティティセクション */
     .entity-section { background:var(--surface); border-radius:var(--radius); margin-bottom:18px; overflow:hidden; }
     .entity-header { display:flex; align-items:center; gap:8px; padding:12px 16px; border-bottom:0.5px solid var(--sep); }
     .entity-icon { font-size:18px; }
     .entity-title { font-size:16px; font-weight:700; flex:1; }
     .entity-badge { font-size:11px; font-weight:600; padding:2px 8px; border-radius:20px; }
-    .badge-out { background:#ffe0de; color:var(--danger); }
-    .badge-in  { background:#daf5e2; color:var(--accent2); }
-
-    /* 各月の行 */
+    .badge-out   { background:#ffe0de; color:var(--danger); }
+    .badge-fixed { background:#fff3d9; color:var(--warn); }
+    .badge-in    { background:#daf5e2; color:var(--accent2); }
+ 
+    /* 各行 */
     .tx-row { display:flex; align-items:center; padding:10px 16px; border-top:0.5px solid var(--sep); gap:8px; }
-    .tx-row:first-child { border-top:none; }
-    .tx-row-date { font-size:14px; color:var(--text2); min-width:110px; flex-shrink:0; }
-    .tx-row-sign { font-size:15px; color:var(--text3); }
+    .tx-row.past { opacity:0.38; }
+    .tx-row-date { font-size:14px; color:var(--text2); min-width:108px; flex-shrink:0; }
+    .tx-row-sign { font-size:15px; color:var(--text3); flex-shrink:0; }
     .tx-row-input { flex:1; border:none; border-bottom:1.5px solid #d1d1d6; outline:none; font-size:18px; font-weight:600; padding:2px 0; text-align:right; background:transparent; font-family:inherit; color:var(--text); min-width:0; }
     .tx-row-input:focus { border-bottom-color:var(--accent); }
     .tx-row-input::placeholder { color:#c7c7cc; font-weight:400; }
-    .tx-row-unit { font-size:13px; color:var(--text2); }
-
+    .tx-row-input:disabled { color:var(--text3); border-bottom-color:transparent; }
+    .tx-row-fixed { flex:1; font-size:18px; font-weight:600; text-align:right; color:var(--text2); }
+    .tx-row-unit { font-size:13px; color:var(--text2); flex-shrink:0; }
+ 
     /* 結果 */
     .result-section { display:none; margin-top:4px; }
     .result-initial { display:flex; justify-content:space-between; align-items:center; padding:13px 16px; font-size:15px; font-weight:500; }
@@ -71,14 +81,14 @@
     .result-balance .label { color:var(--text2); font-weight:500; }
     .result-balance.warn { background:#fff5f4; }
     .result-balance.warn .amount { color:var(--danger); }
-
+ 
     /* 設定 */
     .settings-item { display:flex; align-items:center; padding:12px 16px; border-top:0.5px solid var(--sep); background:var(--surface); gap:8px; }
     .settings-item:first-child { border-top:none; }
     .settings-item-info { flex:1; min-width:0; }
     .settings-item-name { font-size:16px; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-    .settings-item-sub { font-size:12px; color:var(--text3); margin-top:2px; }
-    .action-btn { border:none; font-size:13px; padding:7px 12px; cursor:pointer; border-radius:8px; font-family:inherit; font-weight:600; -webkit-tap-highlight-color:transparent; flex-shrink:0; pointer-events:auto; }
+    .settings-item-sub { font-size:12px; color:var(--text3); margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .action-btn { border:none; font-size:13px; padding:7px 12px; cursor:pointer; border-radius:8px; font-family:inherit; font-weight:600; -webkit-tap-highlight-color:transparent; flex-shrink:0; }
     .action-btn:active { opacity:0.55; }
     .edit-btn { background:#e5f0ff; color:var(--accent); }
     .del-btn  { background:#ffe5e3; color:var(--danger); }
@@ -94,7 +104,7 @@
   </style>
 </head>
 <body>
-
+ 
 <!-- PAGE: MAIN -->
 <div id="page-main" class="page active">
   <div class="navbar">
@@ -112,6 +122,7 @@
       </div>
       <div class="save-indicator" id="save-indicator"></div>
     </div>
+    <button class="btn-update" id="btn-update">🔄　残高を更新する</button>
     <div id="tx-sections-container"></div>
     <button class="btn-primary" id="btn-calculate">🧮 計算開始</button>
     <div class="result-section" id="result-section">
@@ -120,7 +131,7 @@
     </div>
   </div>
 </div>
-
+ 
 <!-- PAGE: SETTINGS -->
 <div id="page-settings" class="page">
   <div class="navbar">
@@ -129,10 +140,21 @@
     <span style="min-width:72px"></span>
   </div>
   <div class="scroll-content">
-    <div class="group-label">クレジットカード（支出）</div>
+    <div class="group-label">計算方法のバックアップ</div>
+    <div class="group">
+      <div class="add-row" id="btn-export-settings" style="color:var(--accent2)">💾　計算方法を保存する（ダウンロード）</div>
+      <div class="add-row" id="btn-import-settings" style="border-top:0.5px solid var(--sep);color:var(--accent)">📂　計算方法を読み込む</div>
+      <input type="file" id="import-file-input" accept=".json" style="display:none">
+    </div>
+    <div class="group-label">クレジットカード（支出・金額変動）</div>
     <div class="group">
       <div id="card-list-el"></div>
       <div class="add-row" id="btn-add-card">＋　クレジットカードを追加</div>
+    </div>
+    <div class="group-label">定額支払い（支出・金額固定）</div>
+    <div class="group">
+      <div id="fixed-list-el"></div>
+      <div class="add-row" id="btn-add-fixed">＋　定額支払いを追加</div>
     </div>
     <div class="group-label">収入</div>
     <div class="group">
@@ -141,7 +163,7 @@
     </div>
   </div>
 </div>
-
+ 
 <!-- PAGE: ADD/EDIT CARD -->
 <div id="page-add-card" class="page">
   <div class="navbar">
@@ -155,8 +177,8 @@
       <div class="input-row"><label for="c-day">引き落とし日</label><input type="number" id="c-day" placeholder="例：10" min="1" max="31" inputmode="numeric"></div>
       <div class="input-row"><label for="c-weekend">土日祝の場合</label>
         <select id="c-weekend">
-          <option value="before">前の平日に前倒し</option>
           <option value="after">翌平日に繰り越し</option>
+          <option value="before">前の平日に前倒し</option>
           <option value="none">そのまま</option>
         </select>
       </div>
@@ -164,7 +186,31 @@
     <p style="font-size:13px;color:var(--text3);padding:4px;line-height:1.6;margin-top:8px">※ 実際の引き落とし日はカード会社にご確認ください。</p>
   </div>
 </div>
-
+ 
+<!-- PAGE: ADD/EDIT FIXED -->
+<div id="page-add-fixed" class="page">
+  <div class="navbar">
+    <button class="nav-btn left" id="btn-fixed-cancel">キャンセル</button>
+    <span class="navbar-title" id="fixed-page-title">定額支払いを追加</span>
+    <button class="nav-btn right" id="btn-fixed-save" style="font-weight:600">保存</button>
+  </div>
+  <div class="scroll-content">
+    <div class="group">
+      <div class="input-row"><label for="f-name">名称</label><input type="text" id="f-name" placeholder="例：Netflix、家賃"></div>
+      <div class="input-row"><label for="f-amount">金額</label><input type="number" id="f-amount" placeholder="0" min="0" inputmode="numeric"><span class="unit-label">円</span></div>
+      <div class="input-row"><label for="f-day">引き落とし日</label><input type="number" id="f-day" placeholder="例：27" min="1" max="31" inputmode="numeric"></div>
+      <div class="input-row"><label for="f-weekend">土日祝の場合</label>
+        <select id="f-weekend">
+          <option value="after">翌平日に繰り越し</option>
+          <option value="before">前の平日に前倒し</option>
+          <option value="none">そのまま</option>
+        </select>
+      </div>
+    </div>
+    <p style="font-size:13px;color:var(--text3);padding:4px;line-height:1.6;margin-top:8px">※ 実際の引き落とし日はサービス提供元にご確認ください。</p>
+  </div>
+</div>
+ 
 <!-- PAGE: ADD/EDIT INCOME -->
 <div id="page-add-income" class="page">
   <div class="navbar">
@@ -187,10 +233,10 @@
     <p style="font-size:13px;color:var(--text3);padding:4px;line-height:1.6;margin-top:8px">※ 実際の振込日はご確認ください。</p>
   </div>
 </div>
-
+ 
 <script>
 (function () {
-
+ 
   /* ========== STORAGE ========== */
   function lsGet(k, def) {
     try { var v = localStorage.getItem(k); return v === null ? def : JSON.parse(v); }
@@ -200,29 +246,31 @@
     try { localStorage.setItem(k, JSON.stringify(v)); return true; }
     catch(e) { return false; }
   }
-
   var DB = {
     cards:       function() { return lsGet('rc_cards',   []); },
+    fixeds:      function() { return lsGet('rc_fixeds',  []); },
     incomes:     function() { return lsGet('rc_incomes', []); },
     saveCards:   function(v) { lsSet('rc_cards',   v); },
+    saveFixeds:  function(v) { lsSet('rc_fixeds',  v); },
     saveIncomes: function(v) { lsSet('rc_incomes', v); },
     getBalance:  function()  { return lsGet('rc_balance', ''); },
     saveBalance: function(v) { lsSet('rc_balance', v); },
     getAmounts:  function()  { return lsGet('rc_amounts', {}); },
     saveAmounts: function(v) { lsSet('rc_amounts', v); }
   };
-
+ 
   /* ========== EDIT STATE ========== */
   var editingCardId   = null;
+  var editingFixedId  = null;
   var editingIncomeId = null;
-
+ 
   /* ========== NAVIGATION ========== */
   function goPage(id) {
-    document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
+    document.querySelectorAll('.page').forEach(function(p){ p.classList.remove('active'); });
     document.getElementById(id).classList.add('active');
-    window.scrollTo(0, 0);
+    window.scrollTo(0,0);
   }
-
+ 
   /* ========== SAVE INDICATOR ========== */
   var _saveTimer = null;
   function showSaved() {
@@ -231,310 +279,294 @@
     el.textContent = '✓ 自動保存しました';
     el.style.opacity = '1';
     clearTimeout(_saveTimer);
-    _saveTimer = setTimeout(function(){ el.style.opacity = '0'; }, 2000);
+    _saveTimer = setTimeout(function(){ el.style.opacity='0'; }, 2000);
   }
-
+ 
   /* ========== DATE UTILS ========== */
   var DOW = ['日','月','火','水','木','金','土'];
   function fmtDate(d) { return (d.getMonth()+1)+'/'+d.getDate()+'（'+DOW[d.getDay()]+'）'; }
   function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-
-  /* ---- 日本の祝日計算 ---- */
+ 
+  /* ---- 日本の祝日 ---- */
   function nthWeekday(yr, mo, nth, dow) {
-    // mo: 0-based, dow: 0=日
-    var d = new Date(yr, mo, 1), count = 0;
+    var d = new Date(yr, mo, 1);
     while (d.getDay() !== dow) d.setDate(d.getDate()+1);
-    d.setDate(d.getDate() + (nth-1)*7);
+    d.setDate(d.getDate()+(nth-1)*7);
     return d.getDate();
   }
   function getJPHolidays(yr) {
     var h = {};
     function add(mo, day) { h[yr+'-'+(mo+1)+'-'+day] = true; }
-    // 固定祝日
-    add(0,1);   // 元日
-    add(1,11);  // 建国記念の日
-    add(2,20);  // 春分の日 (近似)
-    add(3,29);  // 昭和の日
-    add(4,3); add(4,4); add(4,5); // 憲法記念日・みどりの日・こどもの日
-    add(6,15);  // 海の日 (第3月曜)
-    add(7,11);  // 山の日
-    add(8,15);  // 敬老の日 (第3月曜 近似)
-    add(8,22);  // 秋分の日 (近似)
-    add(9,13);  // スポーツの日 (第2月曜)
-    add(10,3);  // 文化の日
-    add(10,23); // 勤労感謝の日
-    // 移動祝日（正確計算）
-    // 成人の日: 1月第2月曜
+    add(0,1); add(1,11); add(2,20); add(3,29);
+    add(4,3); add(4,4); add(4,5);
+    add(7,11); add(10,3); add(10,23);
     add(0, nthWeekday(yr,0,2,1));
-    // 海の日: 7月第3月曜
     add(6, nthWeekday(yr,6,3,1));
-    // 山の日: 8/11 (固定、上で登録済)
-    // 敬老の日: 9月第3月曜
     add(8, nthWeekday(yr,8,3,1));
-    // スポーツの日: 10月第2月曜
+    add(8,23);
     add(9, nthWeekday(yr,9,2,1));
-    // 春分・秋分は近似のまま
-    // 振替休日: 日曜祝日→翌月曜
-    var keys = Object.keys(h);
-    keys.forEach(function(k) {
-      var parts = k.split('-');
-      var d = new Date(parseInt(parts[0]), parseInt(parts[1])-1, parseInt(parts[2]));
+    // 振替休日
+    Object.keys(h).forEach(function(k){
+      var p=k.split('-'); var d=new Date(+p[0],+p[1]-1,+p[2]);
       if (d.getDay()===0) {
-        var next = new Date(d); next.setDate(next.getDate()+1);
-        // 翌日も祝日なら翌々日
-        while (h[next.getFullYear()+'-'+(next.getMonth()+1)+'-'+next.getDate()]) next.setDate(next.getDate()+1);
-        h[next.getFullYear()+'-'+(next.getMonth()+1)+'-'+next.getDate()] = true;
+        var nx=new Date(d); nx.setDate(nx.getDate()+1);
+        while (h[nx.getFullYear()+'-'+(nx.getMonth()+1)+'-'+nx.getDate()]) nx.setDate(nx.getDate()+1);
+        h[nx.getFullYear()+'-'+(nx.getMonth()+1)+'-'+nx.getDate()]=true;
       }
     });
     return h;
   }
-  var _holidayCache = {};
+  var _hCache = {};
   function isHoliday(d) {
-    var yr = d.getFullYear();
-    if (!_holidayCache[yr]) _holidayCache[yr] = getJPHolidays(yr);
-    var key = yr+'-'+(d.getMonth()+1)+'-'+d.getDate();
-    return !!_holidayCache[yr][key];
+    var yr=d.getFullYear();
+    if (!_hCache[yr]) _hCache[yr]=getJPHolidays(yr);
+    return !!_hCache[yr][yr+'-'+(d.getMonth()+1)+'-'+d.getDate()];
   }
-  function isNonBusinessDay(d) {
-    var w = d.getDay();
-    return w===0 || w===6 || isHoliday(d);
-  }
-
-  /* 土日祝を考慮して日付を調整 */
+  function isNonBiz(d) { var w=d.getDay(); return w===0||w===6||isHoliday(d); }
   function adjustWeekend(d, rule) {
-    var r = new Date(d);
-    if (!isNonBusinessDay(r)) return r;
-    if (rule === 'before') {
-      while (isNonBusinessDay(r)) r.setDate(r.getDate()-1);
-    } else if (rule === 'after') {
-      while (isNonBusinessDay(r)) r.setDate(r.getDate()+1);
-    }
+    var r=new Date(d);
+    if (!isNonBiz(r)) return r;
+    if (rule==='before') { while(isNonBiz(r)) r.setDate(r.getDate()-1); }
+    else if (rule==='after') { while(isNonBiz(r)) r.setDate(r.getDate()+1); }
     return r;
   }
-
-  /* ========== GENERATE TRANSACTIONS PER ENTITY ========== */
-  // Returns { cards: [{card, occurrences:[{date,key}]}], incomes: [...] }
-  function genByEntity() {
-    var today=new Date(); today.setHours(0,0,0,0);
-    var end=new Date(today); end.setDate(end.getDate()+92);
-    var cards=DB.cards(), incomes=DB.incomes();
-    var result = { cards: [], incomes: [] };
-
-    cards.forEach(function(c) {
-      var occ = [];
-      for (var mi=0; mi<=3; mi++) {
-        var yr=today.getFullYear(), mo=today.getMonth()+mi;
-        var last=new Date(yr,mo+1,0).getDate();
-        var d=adjustWeekend(new Date(yr,mo,Math.min(c.day,last)),c.weekendRule);
-        if (d>=today && d<=end) {
-          occ.push({ date: d, key: c.id+'_'+mi });
-        }
-      }
-      if (occ.length>0) result.cards.push({ entity: c, occurrences: occ });
-    });
-
-    incomes.forEach(function(inc) {
-      var occ = [];
-      for (var mi=0; mi<=3; mi++) {
-        var yr=today.getFullYear(), mo=today.getMonth()+mi;
-        var last=new Date(yr,mo+1,0).getDate();
-        var d=adjustWeekend(new Date(yr,mo,Math.min(inc.day,last)),inc.weekendRule);
-        if (d>=today && d<=end) {
-          occ.push({ date: d, key: inc.id+'_'+mi });
-        }
-      }
-      if (occ.length>0) result.incomes.push({ entity: inc, occurrences: occ });
-    });
-
-    return result;
-  }
-
-  /* ========== TX DATA (flat, date-sorted) for calculate ========== */
-  var _txData = []; // [{date, name, type, key}]
-
-  function buildFlatTxData() {
-    var today=new Date(); today.setHours(0,0,0,0);
-    var end=new Date(today); end.setDate(end.getDate()+92);
-    var cards=DB.cards(), incomes=DB.incomes(), list=[];
-    for (var mi=0;mi<=3;mi++) {
-      var yr=today.getFullYear(), mo=today.getMonth()+mi;
+ 
+  /* ========== OCCURRENCES ========== */
+  function today0() { var t=new Date(); t.setHours(0,0,0,0); return t; }
+  function endDate() { var e=today0(); e.setDate(e.getDate()+92); return e; }
+ 
+  function occurrencesFor(entityId, day, weekendRule) {
+    var td=today0(), ed=endDate(), occ=[];
+    for (var mi=0; mi<=3; mi++) {
+      var base=new Date(td.getFullYear(), td.getMonth()+mi, 1);
+      var yr=base.getFullYear(), mo=base.getMonth();
       var last=new Date(yr,mo+1,0).getDate();
-      cards.forEach(function(c){
-        var d=adjustWeekend(new Date(yr,mo,Math.min(c.day,last)),c.weekendRule);
-        if(d>=today&&d<=end) list.push({date:d,name:c.name,type:'card',key:c.id+'_'+mi});
-      });
-      incomes.forEach(function(inc){
-        var d=adjustWeekend(new Date(yr,mo,Math.min(inc.day,last)),inc.weekendRule);
-        if(d>=today&&d<=end) list.push({date:d,name:inc.name,type:'income',key:inc.id+'_'+mi});
-      });
+      var d=adjustWeekend(new Date(yr,mo,Math.min(day,last)), weekendRule);
+      if (d>=td && d<=ed) occ.push({ date:d, key:entityId+'_'+yr+'_'+mo });
     }
-    list.sort(function(a,b){return a.date-b.date;});
-    _txData = list;
+    return occ;
   }
-
-  /* ========== RENDER TX SECTIONS (entity-grouped) ========== */
+ 
+  // 全取引フラット（日付順、計算用）
+  var _txData = [];
+  function buildFlatTxData() {
+    var list=[];
+    DB.cards().forEach(function(c){
+      occurrencesFor(c.id,c.day,c.weekendRule).forEach(function(o){
+        list.push({date:o.date,name:c.name,type:'card',key:o.key});
+      });
+    });
+    DB.fixeds().forEach(function(f){
+      occurrencesFor(f.id,f.day,f.weekendRule).forEach(function(o){
+        list.push({date:o.date,name:f.name,type:'fixed',amount:f.amount,key:o.key});
+      });
+    });
+    DB.incomes().forEach(function(inc){
+      occurrencesFor(inc.id,inc.day,inc.weekendRule).forEach(function(o){
+        list.push({date:o.date,name:inc.name,type:'income',key:o.key});
+      });
+    });
+    list.sort(function(a,b){ return a.date-b.date; });
+    _txData=list;
+  }
+ 
+  /* ========== 更新ボタン ========== */
+  function doUpdate() {
+    var balStr = document.getElementById('current-balance').value;
+    if (balStr===''){ alert('現在の口座残高を入力してください'); return; }
+    buildFlatTxData();
+    var td=today0();
+    var pastTx=_txData.filter(function(tx){ return tx.date<td; });
+    if (pastTx.length===0){ alert('精算する過去の取引はありません'); return; }
+ 
+    var amts=DB.getAmounts();
+    var lines=pastTx.map(function(tx){
+      var amt = tx.type==='fixed' ? tx.amount : (parseInt(amts[tx.key])||0);
+      var sign = tx.type==='income' ? '+' : '−';
+      return fmtDate(tx.date)+'　'+tx.name+'　'+sign+'¥'+amt.toLocaleString();
+    });
+    if (!confirm('以下の取引を精算して残高を更新しますか？\n\n'+lines.join('\n'))) return;
+ 
+    var balance=parseInt(balStr)||0;
+    pastTx.forEach(function(tx){
+      var amt = tx.type==='fixed' ? tx.amount : (parseInt(amts[tx.key])||0);
+      balance += tx.type==='income' ? amt : -amt;
+      delete amts[tx.key];
+    });
+    DB.saveAmounts(amts);
+    DB.saveBalance(String(balance));
+    document.getElementById('current-balance').value=balance;
+    showSaved();
+    document.getElementById('result-section').style.display='none';
+    renderTxList();
+    alert('残高を ¥'+balance.toLocaleString()+' に更新しました');
+  }
+ 
+  /* ========== RENDER TX SECTIONS ========== */
   function renderTxList() {
     buildFlatTxData();
-    var byEntity = genByEntity();
-    var container = document.getElementById('tx-sections-container');
-    var savedAmts = DB.getAmounts();
-
-    var hasAny = byEntity.cards.length>0 || byEntity.incomes.length>0;
-    if (!hasAny) {
-      container.innerHTML =
-        '<div class="group"><div class="empty-state"><div class="empty-icon">📋</div>'
-        +'<div class="empty-text">「計算方法」ボタンから<br>カードや収入を追加してください</div></div></div>';
+    var container=document.getElementById('tx-sections-container');
+    var savedAmts=DB.getAmounts();
+    var td=today0();
+    var cards=DB.cards(), fixeds=DB.fixeds(), incomes=DB.incomes();
+ 
+    if (cards.length===0 && fixeds.length===0 && incomes.length===0) {
+      container.innerHTML='<div class="group"><div class="empty-state"><div class="empty-icon">📋</div><div class="empty-text">「計算方法」ボタンから<br>カードや収入を追加してください</div></div></div>';
       return;
     }
-
-    var html = '';
-
-    // ---- カード（支出）----
-    if (byEntity.cards.length > 0) {
-      html += '<div class="group-label">支払予定（クレジットカード）</div>';
-      byEntity.cards.forEach(function(item) {
-        html += '<div class="entity-section">'
-          + '<div class="entity-header">'
-          + '<span class="entity-icon">💳</span>'
-          + '<span class="entity-title">'+esc(item.entity.name)+'</span>'
-          + '<span class="entity-badge badge-out">支出</span>'
-          + '</div>';
-        item.occurrences.forEach(function(occ) {
-          var savedVal = savedAmts[occ.key] || '';
-          html += '<div class="tx-row">'
-            + '<span class="tx-row-date">'+fmtDate(occ.date)+'</span>'
-            + '<span class="tx-row-sign">− ¥</span>'
-            + '<input type="number" class="tx-row-input" data-key="'+occ.key+'" placeholder="0" inputmode="numeric" min="0" value="'+esc(String(savedVal))+'">'
-            + '<span class="tx-row-unit">円</span>'
-            + '</div>';
+ 
+    var html='';
+ 
+    // カード
+    if (cards.length>0) {
+      html+='<div class="group-label">支払予定（クレジットカード）</div>';
+      cards.forEach(function(c){
+        var occ=occurrencesFor(c.id,c.day,c.weekendRule);
+        if (occ.length===0) return;
+        html+='<div class="entity-section"><div class="entity-header"><span class="entity-icon">💳</span><span class="entity-title">'+esc(c.name)+'</span><span class="entity-badge badge-out">支出</span></div>';
+        occ.forEach(function(o){
+          var past=o.date<td;
+          var val=savedAmts[o.key]||'';
+          html+='<div class="tx-row'+(past?' past':'')+'"><span class="tx-row-date">'+fmtDate(o.date)+(past?' 済':'')+'</span>'
+            +'<span class="tx-row-sign">− ¥</span>'
+            +'<input type="number" class="tx-row-input" data-key="'+o.key+'" placeholder="0" inputmode="numeric" min="0" value="'+esc(String(val))+'"'+(past?' disabled':'')+'>'
+            +'<span class="tx-row-unit">円</span></div>';
         });
-        html += '</div>';
+        html+='</div>';
       });
     }
-
-    // ---- 収入 ----
-    if (byEntity.incomes.length > 0) {
-      html += '<div class="group-label">収入予定</div>';
-      byEntity.incomes.forEach(function(item) {
-        html += '<div class="entity-section">'
-          + '<div class="entity-header">'
-          + '<span class="entity-icon">💴</span>'
-          + '<span class="entity-title">'+esc(item.entity.name)+'</span>'
-          + '<span class="entity-badge badge-in">収入</span>'
-          + '</div>';
-        item.occurrences.forEach(function(occ) {
-          var savedVal = savedAmts[occ.key] || '';
-          html += '<div class="tx-row">'
-            + '<span class="tx-row-date">'+fmtDate(occ.date)+'</span>'
-            + '<span class="tx-row-sign">+ ¥</span>'
-            + '<input type="number" class="tx-row-input" data-key="'+occ.key+'" placeholder="0" inputmode="numeric" min="0" value="'+esc(String(savedVal))+'">'
-            + '<span class="tx-row-unit">円</span>'
-            + '</div>';
+ 
+    // 定額
+    if (fixeds.length>0) {
+      html+='<div class="group-label">定額支払い</div>';
+      fixeds.forEach(function(f){
+        var occ=occurrencesFor(f.id,f.day,f.weekendRule);
+        if (occ.length===0) return;
+        html+='<div class="entity-section"><div class="entity-header"><span class="entity-icon">📋</span><span class="entity-title">'+esc(f.name)+'</span><span class="entity-badge badge-fixed">定額</span></div>';
+        occ.forEach(function(o){
+          var past=o.date<td;
+          html+='<div class="tx-row'+(past?' past':'')+'"><span class="tx-row-date">'+fmtDate(o.date)+(past?' 済':'')+'</span>'
+            +'<span class="tx-row-sign">− ¥</span>'
+            +'<span class="tx-row-fixed">'+f.amount.toLocaleString()+'</span>'
+            +'<span class="tx-row-unit">円</span></div>';
         });
-        html += '</div>';
+        html+='</div>';
       });
     }
-
-    container.innerHTML = html;
-
-    /* auto-save on input */
-    container.querySelectorAll('.tx-row-input').forEach(function(inp) {
-      inp.addEventListener('input', function() {
-        var amts = DB.getAmounts();
-        amts[inp.getAttribute('data-key')] = inp.value;
-        DB.saveAmounts(amts);
-        showSaved();
+ 
+    // 収入
+    if (incomes.length>0) {
+      html+='<div class="group-label">収入予定</div>';
+      incomes.forEach(function(inc){
+        var occ=occurrencesFor(inc.id,inc.day,inc.weekendRule);
+        if (occ.length===0) return;
+        html+='<div class="entity-section"><div class="entity-header"><span class="entity-icon">💴</span><span class="entity-title">'+esc(inc.name)+'</span><span class="entity-badge badge-in">収入</span></div>';
+        occ.forEach(function(o){
+          var past=o.date<td;
+          var val=savedAmts[o.key]||'';
+          html+='<div class="tx-row'+(past?' past':'')+'"><span class="tx-row-date">'+fmtDate(o.date)+(past?' 済':'')+'</span>'
+            +'<span class="tx-row-sign">+ ¥</span>'
+            +'<input type="number" class="tx-row-input" data-key="'+o.key+'" placeholder="0" inputmode="numeric" min="0" value="'+esc(String(val))+'"'+(past?' disabled':'')+'>'
+            +'<span class="tx-row-unit">円</span></div>';
+        });
+        html+='</div>';
+      });
+    }
+ 
+    container.innerHTML=html;
+ 
+    // auto-save
+    container.querySelectorAll('.tx-row-input').forEach(function(inp){
+      inp.addEventListener('input', function(){
+        var a=DB.getAmounts(); a[inp.getAttribute('data-key')]=inp.value; DB.saveAmounts(a); showSaved();
       });
     });
   }
-
+ 
   /* ========== AUTO-SAVE BALANCE ========== */
   document.getElementById('current-balance').addEventListener('input', function(){
-    DB.saveBalance(this.value);
-    showSaved();
+    DB.saveBalance(this.value); showSaved();
   });
-
+ 
   /* ========== CALCULATE ========== */
   function calculate() {
-    var balStr = document.getElementById('current-balance').value;
-    if (!balStr) { alert('現在の口座残高を入力してください'); return; }
-    if (_txData.length===0) { alert('計算方法ページでカードや収入を追加してください'); return; }
-
-    // 現在のinput値をkeyMapへ
-    var amtMap = {};
-    document.querySelectorAll('.tx-row-input').forEach(function(inp) {
-      amtMap[inp.getAttribute('data-key')] = parseInt(inp.value)||0;
+    var balStr=document.getElementById('current-balance').value;
+    if (balStr===''){ alert('現在の口座残高を入力してください'); return; }
+    buildFlatTxData();
+    var td=today0();
+    var futureTx=_txData.filter(function(tx){ return tx.date>=td; });
+    if (futureTx.length===0){ alert('今後の取引がありません'); return; }
+ 
+    var amtMap={};
+    document.querySelectorAll('.tx-row-input').forEach(function(inp){
+      amtMap[inp.getAttribute('data-key')]=parseInt(inp.value)||0;
     });
-
-    var balance = parseInt(balStr)||0;
-    var today=new Date(); today.setHours(0,0,0,0);
-    var html='<div class="result-initial"><span style="color:var(--text2)">'+fmtDate(today)+'　現在</span><span style="font-size:17px;font-weight:700">¥'+balance.toLocaleString()+'</span></div>';
-
-    _txData.forEach(function(tx) {
-      var amt = amtMap[tx.key] || 0;
-      var isIncome = tx.type==='income';
-      balance += isIncome ? amt : -amt;
-      var isNeg = balance<0;
-      html += '<div class="result-entry">'
+ 
+    var balance=parseInt(balStr)||0;
+    var html='<div class="result-initial"><span style="color:var(--text2)">'+fmtDate(td)+'　現在</span><span style="font-size:17px;font-weight:700">¥'+balance.toLocaleString()+'</span></div>';
+ 
+    futureTx.forEach(function(tx){
+      var isIncome=tx.type==='income';
+      var amt=tx.type==='fixed' ? tx.amount : (amtMap[tx.key]||0);
+      balance+=isIncome?amt:-amt;
+      var isNeg=balance<0;
+      html+='<div class="result-entry">'
         +'<div class="result-line"><span class="result-line-date">'+fmtDate(tx.date)+'</span><span class="result-line-name">'+esc(tx.name)+'</span><span class="result-line-amount '+(isIncome?'pos':'neg')+'">'+(isIncome?'+¥':'−¥')+amt.toLocaleString()+'</span></div>'
         +'<div class="result-balance'+(isNeg?' warn':'')+'"><span class="label">残高'+(isNeg?'　⚠️':'')+'</span><span class="amount">¥'+balance.toLocaleString()+'</span></div>'
         +'</div>';
     });
-
-    document.getElementById('result-content').innerHTML = html;
-    var sec = document.getElementById('result-section');
-    sec.style.display = 'block';
-    setTimeout(function(){ sec.scrollIntoView({behavior:'smooth',block:'start'}); }, 80);
+    document.getElementById('result-content').innerHTML=html;
+    var sec=document.getElementById('result-section');
+    sec.style.display='block';
+    setTimeout(function(){ sec.scrollIntoView({behavior:'smooth',block:'start'}); },80);
   }
-
+ 
   /* ========== RENDER SETTINGS ========== */
   var wkLabel={before:'前の平日',after:'翌平日',none:'そのまま'};
-
+ 
   function renderSettingsLists() {
-    var cards=DB.cards(), incomes=DB.incomes();
-
-    document.getElementById('card-list-el').innerHTML = cards.length===0
+    var cards=DB.cards(), fixeds=DB.fixeds(), incomes=DB.incomes();
+ 
+    document.getElementById('card-list-el').innerHTML=cards.length===0
       ? '<div style="padding:14px 16px;color:var(--text3);font-size:15px">まだ登録がありません</div>'
       : cards.map(function(c){
-          return '<div class="settings-item" data-id="'+c.id+'" data-type="card">'
-            +'<div class="settings-item-info">'
-            +'<div class="settings-item-name">'+esc(c.name)+'</div>'
-            +'<div class="settings-item-sub">毎月'+c.day+'日 ／ 土日は'+wkLabel[c.weekendRule]+'</div>'
-            +'</div>'
-            +'<button class="action-btn edit-btn" data-id="'+c.id+'" data-type="card">編集</button>'
-            +'<button class="action-btn del-btn"  data-id="'+c.id+'" data-type="card">削除</button>'
-            +'</div>';
+          return '<div class="settings-item"><div class="settings-item-info"><div class="settings-item-name">'+esc(c.name)+'</div>'
+            +'<div class="settings-item-sub">毎月'+c.day+'日 ／ 土日祝は'+wkLabel[c.weekendRule]+'</div></div>'
+            +'<button class="action-btn edit-btn" data-id="'+c.id+'">編集</button>'
+            +'<button class="action-btn del-btn"  data-id="'+c.id+'">削除</button></div>';
         }).join('');
-
-    document.getElementById('income-list-el').innerHTML = incomes.length===0
+ 
+    document.getElementById('fixed-list-el').innerHTML=fixeds.length===0
+      ? '<div style="padding:14px 16px;color:var(--text3);font-size:15px">まだ登録がありません</div>'
+      : fixeds.map(function(f){
+          return '<div class="settings-item"><div class="settings-item-info"><div class="settings-item-name">'+esc(f.name)+'</div>'
+            +'<div class="settings-item-sub">毎月'+f.day+'日 ／ ¥'+f.amount.toLocaleString()+' ／ 土日祝は'+wkLabel[f.weekendRule]+'</div></div>'
+            +'<button class="action-btn edit-btn" data-id="'+f.id+'">編集</button>'
+            +'<button class="action-btn del-btn"  data-id="'+f.id+'">削除</button></div>';
+        }).join('');
+ 
+    document.getElementById('income-list-el').innerHTML=incomes.length===0
       ? '<div style="padding:14px 16px;color:var(--text3);font-size:15px">まだ登録がありません</div>'
       : incomes.map(function(inc){
-          return '<div class="settings-item" data-id="'+inc.id+'" data-type="income">'
-            +'<div class="settings-item-info">'
-            +'<div class="settings-item-name">'+esc(inc.name)+'</div>'
-            +'<div class="settings-item-sub">毎月'+inc.day+'日 ／ 土日は'+wkLabel[inc.weekendRule]+'</div>'
-            +'</div>'
-            +'<button class="action-btn edit-btn" data-id="'+inc.id+'" data-type="income">編集</button>'
-            +'<button class="action-btn del-btn"  data-id="'+inc.id+'" data-type="income">削除</button>'
-            +'</div>';
+          return '<div class="settings-item"><div class="settings-item-info"><div class="settings-item-name">'+esc(inc.name)+'</div>'
+            +'<div class="settings-item-sub">毎月'+inc.day+'日 ／ 土日祝は'+wkLabel[inc.weekendRule]+'</div></div>'
+            +'<button class="action-btn edit-btn" data-id="'+inc.id+'">編集</button>'
+            +'<button class="action-btn del-btn"  data-id="'+inc.id+'">削除</button></div>';
         }).join('');
-
+ 
+    // カードボタン
     document.querySelectorAll('#card-list-el .del-btn').forEach(function(btn){
-      btn.addEventListener('click', function(e){
-        e.stopPropagation();
-        var id = btn.getAttribute('data-id');
-        if (!confirm('このカードを削除しますか？')) return;
-        DB.saveCards(DB.cards().filter(function(c){return c.id!==id;}));
+      btn.addEventListener('click',function(e){ e.stopPropagation();
+        if(!confirm('このカードを削除しますか？'))return;
+        DB.saveCards(DB.cards().filter(function(c){return c.id!==btn.getAttribute('data-id');}));
         renderSettingsLists();
       });
     });
     document.querySelectorAll('#card-list-el .edit-btn').forEach(function(btn){
-      btn.addEventListener('click', function(e){
-        e.stopPropagation();
-        var id = btn.getAttribute('data-id');
-        var card = DB.cards().filter(function(c){return c.id===id;})[0];
-        if (!card) return;
-        editingCardId = id;
+      btn.addEventListener('click',function(e){ e.stopPropagation();
+        var id=btn.getAttribute('data-id');
+        var card=DB.cards().filter(function(c){return c.id===id;})[0]; if(!card)return;
+        editingCardId=id;
         document.getElementById('card-page-title').textContent='カードを編集';
         document.getElementById('c-name').value=card.name;
         document.getElementById('c-day').value=card.day;
@@ -542,22 +574,42 @@
         goPage('page-add-card');
       });
     });
+ 
+    // 定額ボタン
+    document.querySelectorAll('#fixed-list-el .del-btn').forEach(function(btn){
+      btn.addEventListener('click',function(e){ e.stopPropagation();
+        if(!confirm('この定額支払いを削除しますか？'))return;
+        DB.saveFixeds(DB.fixeds().filter(function(f){return f.id!==btn.getAttribute('data-id');}));
+        renderSettingsLists();
+      });
+    });
+    document.querySelectorAll('#fixed-list-el .edit-btn').forEach(function(btn){
+      btn.addEventListener('click',function(e){ e.stopPropagation();
+        var id=btn.getAttribute('data-id');
+        var f=DB.fixeds().filter(function(x){return x.id===id;})[0]; if(!f)return;
+        editingFixedId=id;
+        document.getElementById('fixed-page-title').textContent='定額支払いを編集';
+        document.getElementById('f-name').value=f.name;
+        document.getElementById('f-amount').value=f.amount;
+        document.getElementById('f-day').value=f.day;
+        document.getElementById('f-weekend').value=f.weekendRule;
+        goPage('page-add-fixed');
+      });
+    });
+ 
+    // 収入ボタン
     document.querySelectorAll('#income-list-el .del-btn').forEach(function(btn){
-      btn.addEventListener('click', function(e){
-        e.stopPropagation();
-        var id = btn.getAttribute('data-id');
-        if (!confirm('この収入を削除しますか？')) return;
-        DB.saveIncomes(DB.incomes().filter(function(i){return i.id!==id;}));
+      btn.addEventListener('click',function(e){ e.stopPropagation();
+        if(!confirm('この収入を削除しますか？'))return;
+        DB.saveIncomes(DB.incomes().filter(function(i){return i.id!==btn.getAttribute('data-id');}));
         renderSettingsLists();
       });
     });
     document.querySelectorAll('#income-list-el .edit-btn').forEach(function(btn){
-      btn.addEventListener('click', function(e){
-        e.stopPropagation();
-        var id = btn.getAttribute('data-id');
-        var inc = DB.incomes().filter(function(i){return i.id===id;})[0];
-        if (!inc) return;
-        editingIncomeId = id;
+      btn.addEventListener('click',function(e){ e.stopPropagation();
+        var id=btn.getAttribute('data-id');
+        var inc=DB.incomes().filter(function(i){return i.id===id;})[0]; if(!inc)return;
+        editingIncomeId=id;
         document.getElementById('income-page-title').textContent='収入を編集';
         document.getElementById('i-name').value=inc.name;
         document.getElementById('i-day').value=inc.day;
@@ -566,71 +618,147 @@
       });
     });
   }
-
+ 
   /* ========== SAVE CARD ========== */
-  function saveCard() {
+  function saveCard(){
     var name=document.getElementById('c-name').value.trim();
     var day=parseInt(document.getElementById('c-day').value);
     var wr=document.getElementById('c-weekend').value;
-    if (!name){alert('カード名を入力してください');return;}
-    if (!day||day<1||day>31){alert('引き落とし日を 1〜31 で入力してください');return;}
+    if(!name){alert('カード名を入力してください');return;}
+    if(!day||day<1||day>31){alert('引き落とし日を 1〜31 で入力してください');return;}
     var cards=DB.cards();
-    if (editingCardId) {
-      cards=cards.map(function(c){return c.id===editingCardId?{id:c.id,name:name,day:day,weekendRule:wr}:c;});
-    } else {
-      cards.push({id:Date.now().toString(),name:name,day:day,weekendRule:wr});
-    }
-    DB.saveCards(cards);
-    editingCardId=null;
-    renderSettingsLists();
-    goPage('page-settings');
+    if(editingCardId) cards=cards.map(function(c){return c.id===editingCardId?{id:c.id,name:name,day:day,weekendRule:wr}:c;});
+    else cards.push({id:Date.now().toString(),name:name,day:day,weekendRule:wr});
+    DB.saveCards(cards); editingCardId=null; renderSettingsLists(); goPage('page-settings');
   }
-
+ 
+  /* ========== SAVE FIXED ========== */
+  function saveFixed(){
+    var name=document.getElementById('f-name').value.trim();
+    var amount=parseInt(document.getElementById('f-amount').value)||0;
+    var day=parseInt(document.getElementById('f-day').value);
+    var wr=document.getElementById('f-weekend').value;
+    if(!name){alert('名称を入力してください');return;}
+    if(amount<=0){alert('金額を入力してください');return;}
+    if(!day||day<1||day>31){alert('引き落とし日を 1〜31 で入力してください');return;}
+    var fixeds=DB.fixeds();
+    if(editingFixedId) fixeds=fixeds.map(function(f){return f.id===editingFixedId?{id:f.id,name:name,amount:amount,day:day,weekendRule:wr}:f;});
+    else fixeds.push({id:Date.now().toString(),name:name,amount:amount,day:day,weekendRule:wr});
+    DB.saveFixeds(fixeds); editingFixedId=null; renderSettingsLists(); goPage('page-settings');
+  }
+ 
   /* ========== SAVE INCOME ========== */
-  function saveIncome() {
+  function saveIncome(){
     var name=document.getElementById('i-name').value.trim();
     var day=parseInt(document.getElementById('i-day').value);
     var wr=document.getElementById('i-weekend').value;
-    if (!name){alert('収入源の名称を入力してください');return;}
-    if (!day||day<1||day>31){alert('振込日を 1〜31 で入力してください');return;}
+    if(!name){alert('収入源の名称を入力してください');return;}
+    if(!day||day<1||day>31){alert('振込日を 1〜31 で入力してください');return;}
     var incomes=DB.incomes();
-    if (editingIncomeId) {
-      incomes=incomes.map(function(i){return i.id===editingIncomeId?{id:i.id,name:name,day:day,weekendRule:wr}:i;});
-    } else {
-      incomes.push({id:Date.now().toString(),name:name,day:day,weekendRule:wr});
-    }
-    DB.saveIncomes(incomes);
-    editingIncomeId=null;
-    renderSettingsLists();
-    goPage('page-settings');
+    if(editingIncomeId) incomes=incomes.map(function(i){return i.id===editingIncomeId?{id:i.id,name:name,day:day,weekendRule:wr}:i;});
+    else incomes.push({id:Date.now().toString(),name:name,day:day,weekendRule:wr});
+    DB.saveIncomes(incomes); editingIncomeId=null; renderSettingsLists(); goPage('page-settings');
   }
-
-  /* ========== STATIC LISTENERS ========== */
-  document.getElementById('btn-go-settings').addEventListener('click',function(){renderSettingsLists();goPage('page-settings');});
-  document.getElementById('btn-settings-done').addEventListener('click',function(){renderTxList();document.getElementById('result-section').style.display='none';goPage('page-main');});
+ 
+  /* ========== EXPORT / IMPORT ========== */
+  function exportSettings() {
+    var data = {
+      version: 1,
+      cards:   DB.cards(),
+      fixeds:  DB.fixeds(),
+      incomes: DB.incomes()
+    };
+    var json = JSON.stringify(data, null, 2);
+    var blob = new Blob([json], {type:'application/json'});
+    var url  = URL.createObjectURL(blob);
+    var now  = new Date();
+    var fname = '残高計算方法_'
+      + now.getFullYear()
+      + ('0'+(now.getMonth()+1)).slice(-2)
+      + ('0'+now.getDate()).slice(-2)
+      + '.json';
+    var a = document.createElement('a');
+    a.href = url; a.download = fname;
+    document.body.appendChild(a); a.click();
+    document.body.removeChild(a);
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+  }
+ 
+  function importSettings(file) {
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      try {
+        var data = JSON.parse(e.target.result);
+        if (!data || !Array.isArray(data.cards) || !Array.isArray(data.incomes)) {
+          alert('ファイルの形式が正しくありません'); return;
+        }
+        var cards   = data.cards   || [];
+        var fixeds  = data.fixeds  || [];
+        var incomes = data.incomes || [];
+        if (!confirm(
+          '読み込むと現在の計算方法が上書きされます。\n\n'
+          +'カード: '+cards.length+'件 ／ 定額: '+fixeds.length+'件 ／ 収入: '+incomes.length+'件\n\n続けますか？'
+        )) return;
+        DB.saveCards(cards);
+        DB.saveFixeds(fixeds);
+        DB.saveIncomes(incomes);
+        renderSettingsLists();
+        alert('読み込みが完了しました');
+      } catch(err) {
+        alert('読み込みに失敗しました: '+err.message);
+      }
+    };
+    reader.readAsText(file);
+  }
+ 
+  /* ========== LISTENERS ========== */
+  document.getElementById('btn-go-settings').addEventListener('click',function(){ renderSettingsLists(); goPage('page-settings'); });
+  document.getElementById('btn-settings-done').addEventListener('click',function(){ renderTxList(); document.getElementById('result-section').style.display='none'; goPage('page-main'); });
+  document.getElementById('btn-export-settings').addEventListener('click', exportSettings);
+  document.getElementById('btn-import-settings').addEventListener('click',function(){
+    document.getElementById('import-file-input').value='';
+    document.getElementById('import-file-input').click();
+  });
+  document.getElementById('import-file-input').addEventListener('change',function(){
+    importSettings(this.files[0]);
+    this.value='';
+  });
+  document.getElementById('btn-update').addEventListener('click', doUpdate);
+  document.getElementById('btn-calculate').addEventListener('click', calculate);
+ 
   document.getElementById('btn-add-card').addEventListener('click',function(){
     editingCardId=null;
     document.getElementById('card-page-title').textContent='カードを追加';
-    document.getElementById('c-name').value='';document.getElementById('c-day').value='';document.getElementById('c-weekend').value='before';
+    document.getElementById('c-name').value=''; document.getElementById('c-day').value=''; document.getElementById('c-weekend').value='after';
     goPage('page-add-card');
   });
+  document.getElementById('btn-card-cancel').addEventListener('click',function(){ editingCardId=null; goPage('page-settings'); });
+  document.getElementById('btn-card-save').addEventListener('click', saveCard);
+ 
+  document.getElementById('btn-add-fixed').addEventListener('click',function(){
+    editingFixedId=null;
+    document.getElementById('fixed-page-title').textContent='定額支払いを追加';
+    document.getElementById('f-name').value=''; document.getElementById('f-amount').value=''; document.getElementById('f-day').value=''; document.getElementById('f-weekend').value='after';
+    goPage('page-add-fixed');
+  });
+  document.getElementById('btn-fixed-cancel').addEventListener('click',function(){ editingFixedId=null; goPage('page-settings'); });
+  document.getElementById('btn-fixed-save').addEventListener('click', saveFixed);
+ 
   document.getElementById('btn-add-income').addEventListener('click',function(){
     editingIncomeId=null;
     document.getElementById('income-page-title').textContent='収入を追加';
-    document.getElementById('i-name').value='';document.getElementById('i-day').value='';document.getElementById('i-weekend').value='before';
+    document.getElementById('i-name').value=''; document.getElementById('i-day').value=''; document.getElementById('i-weekend').value='before';
     goPage('page-add-income');
   });
-  document.getElementById('btn-card-cancel').addEventListener('click',function(){editingCardId=null;goPage('page-settings');});
-  document.getElementById('btn-income-cancel').addEventListener('click',function(){editingIncomeId=null;goPage('page-settings');});
-  document.getElementById('btn-card-save').addEventListener('click',saveCard);
-  document.getElementById('btn-income-save').addEventListener('click',saveIncome);
-  document.getElementById('btn-calculate').addEventListener('click',calculate);
-
+  document.getElementById('btn-income-cancel').addEventListener('click',function(){ editingIncomeId=null; goPage('page-settings'); });
+  document.getElementById('btn-income-save').addEventListener('click', saveIncome);
+ 
   /* ========== INIT ========== */
-  var savedBal = DB.getBalance();
-  if (savedBal) document.getElementById('current-balance').value = savedBal;
+  var savedBal=DB.getBalance();
+  if(savedBal) document.getElementById('current-balance').value=savedBal;
   renderTxList();
-
+ 
 })();
 </script>
 </body>
